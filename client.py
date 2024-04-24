@@ -88,40 +88,43 @@ def send_image_segments(conn, image_bytes):
     conn.sendall(image_bytes)
 
 
+def main():
 # Create a socket object
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Replace 'server_public_ip' with the public IP of the server
-server_public_ip = 'localhost'
-port = 12345
+    # Replace 'server_public_ip' with the public IP of the server
+    server_public_ip = 'localhost'
+    port = 12345
 
-# Connect to the server
-client_socket.connect((server_public_ip, port))
+    # Connect to the server
+    client_socket.connect((server_public_ip, port))
 
-# Send the image
-image_path = "1200px-2019_Toyota_Corolla_Icon_Tech_VVT-i_Hybrid_1.8.jpg"  # Replace with the actual image path
-# Open the image file and read its bytes
-with open(image_path, 'rb') as f:
-        image_bytes = f.read()
+    # Send the image
+    image_path = "depositphotos_49418809-stock-photo-frog-on-the-leaf.jpg"  # Replace with the actual image path
+    # Open the image file and read its bytes
+    with open(image_path, 'rb') as f:
+            image_bytes = f.read()
 
 
 
-while True:
-    try:
-        operation=input("enter the operation gr for grey fl for filter ed for edge: ")
-        segments = split_image(5, image_bytes)
-        processed_segments_bytes = []
-        for segment in segments:
-            client_socket.send(operation.encode('utf-8'))
-            send_image_segments(client_socket, segment)
-            processed_segment_bytes, _ = receive_image(client_socket)
-            display_image_from_bytes(processed_segment_bytes)
-            processed_segments_bytes.append(processed_segment_bytes)
-        # Concatenate all processed segments to form the processed image
-        combined_image_path = combine_segments_to_bytes(processed_segments_bytes)
-        display_image_from_bytes(combined_image_path)
-    except KeyboardInterrupt:
-        print("^C")
-        break
-# Close the connection with the server
-client_socket.close()
+    while True:
+        try:
+            operation=input("enter the operation gr for grey fl for filter ed for edge: ")
+            segments = split_image(5, image_bytes)
+            processed_segments_bytes = []
+            for segment in segments:
+                client_socket.send(operation.encode('utf-8'))
+                send_image_segments(client_socket, segment)
+                processed_segment_bytes, _ = receive_image(client_socket)
+                display_image_from_bytes(processed_segment_bytes)
+                processed_segments_bytes.append(processed_segment_bytes)
+            # Concatenate all processed segments to form the processed image
+            combined_image_path = combine_segments_to_bytes(processed_segments_bytes)
+            display_image_from_bytes(combined_image_path)
+        except KeyboardInterrupt:
+            print("^C")
+            break
+    # Close the connection with the server
+    client_socket.close()
+if __name__ == "__main__":
+    main()
