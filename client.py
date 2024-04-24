@@ -24,6 +24,29 @@ def split_image(num_segments, image_bytes):
         segments.append(segment_bytes.read())
     return segments
 
+
+def combine_segments_to_bytes(segments):
+    # Read the first segment to get the image dimensions
+    first_segment = Image.open(io.BytesIO(segments[0]))
+    width, height = first_segment.size
+    
+    # Create a new image with the same dimensions
+    combined_image = Image.new("RGB", (width, height * len(segments)))
+    
+    # Paste each segment onto the combined image
+    for i, segment_bytes in enumerate(segments):
+        segment = Image.open(io.BytesIO(segment_bytes))
+        combined_image.paste(segment, (0, i * height))
+    
+    # Save the combined image to a BytesIO object
+    combined_image_bytes = io.BytesIO()
+    combined_image.save(combined_image_bytes, format='JPEG')
+    combined_image_bytes.seek(0)
+    
+    return combined_image_bytes.read()
+
+
+
 def display_image_from_bytes(image_bytes):
     # Create a BytesIO object to read the image bytes
     image_stream = io.BytesIO(image_bytes)
@@ -83,57 +106,22 @@ with open(image_path, 'rb') as f:
 
 
 
-
-# Send the image
-# segments=split_image(4,image_bytes)
-# for s in segments:
-#     client_socket.send("ed".encode('utf-8'))
-#     send_image_segments(client_socket,s)
-
-# while True:
-
-#     user_input = input("Enter the operation: ")
-#     client_socket.send(user_input.encode('utf-8'))
-#     # send_image(client_socket, image_path)
-#     send_image_segments(client_socket,image_bytes)
-#     image=receive_image(client_socket)                                            
-#     display_image_from_bytes(image[0])
-#     user_input = input("do you want to quit Y/N: ")
-#     if user_input=="Y":
-#         client_socket.send("q".encode('utf-8'))
-#         break
-#     else:continue
-
-
-
-    # Send the image
-    #######################################################
-# processed_image_bytes = b''
-# segments=split_image(4,image_bytes)
-# for s in segments:
-#     client_socket.send("ed".encode('utf-8'))
-#     send_image_segments(client_socket, s)
-#     processed_segment_bytes= receive_image(client_socket)[0]
-#     processed_image_bytes = processed_image_bytes+processed_segment_bytes    
-#     # display_image_from_bytes(processed_segment_bytes)       
-#     display_image_from_bytes(processed_image_bytes)                        
-# display_image_from_bytes(processed_image_bytes)
-######################################
-# Send the image
-segments = split_image(2, image_bytes)
-processed_segments_bytes = []
-for segment in segments:
-    client_socket.send("ed".encode('utf-8'))
-    send_image_segments(client_socket, segment)
-    processed_segment_bytes, _ = receive_image(client_socket)
-    display_image_from_bytes(processed_segment_bytes)
-    processed_segments_bytes.append(processed_segment_bytes)
-# Concatenate all processed segments to form the processed image
-processed_image_bytes = b"".join(processed_segments_bytes)
-
-# Display the processed image
-display_image_from_bytes(processed_image_bytes)
-
-
+while True:
+    try:
+        operation=input("enter the operation gr for grey fl for filter ed for edge: ")
+        segments = split_image(5, image_bytes)
+        processed_segments_bytes = []
+        for segment in segments:
+            client_socket.send(operation.encode('utf-8'))
+            send_image_segments(client_socket, segment)
+            processed_segment_bytes, _ = receive_image(client_socket)
+            display_image_from_bytes(processed_segment_bytes)
+            processed_segments_bytes.append(processed_segment_bytes)
+        # Concatenate all processed segments to form the processed image
+        combined_image_path = combine_segments_to_bytes(processed_segments_bytes)
+        display_image_from_bytes(combined_image_path)
+    except KeyboardInterrupt:
+        print("^C")
+        break
 # Close the connection with the server
 client_socket.close()
