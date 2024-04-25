@@ -117,33 +117,6 @@ class ImageConverterApp:
         # Resize the photo and return the resized copy
         return photo.subsample(int(photo.width() / width), int(photo.height() / height))
 
-    # def display_image(self, image):
-    #     # Calculate the maximum size based on the number of images
-    #     max_width = 800 // (len(self.root.pack_slaves()) - 2) if len(self.root.pack_slaves()) > 2 else 800  # Adjust the width of the window as needed
-    #     max_height = 400
-
-    #     # Create the thumbnail
-    #     width, height = image.size
-    #     thumbnail_width = min(width, max_width)
-    #     thumbnail_height = min(height, max_height)
-    #     image.thumbnail((thumbnail_width, thumbnail_height))
-
-    #     # Display the thumbnail
-    #     photo = ImageTk.PhotoImage(image)
-    #     label = tk.Label(self.root, image=photo)
-    #     label.image = photo  # Keep a reference to avoid garbage collection
-    #     label.pack(side="left", padx=10, pady=10)  # Adjust padding as needed
-
-    #     # Resize all displayed images
-    #     for widget in self.root.pack_slaves():
-    #         if isinstance(widget, tk.Label) and hasattr(widget, 'image'):
-    #             widget.image = self.resize_photo(widget.image, thumbnail_width, thumbnail_height)
-    #             widget.configure(image=widget.image)
-
-
-
-
-
 
     def convert_to_bytes(self, image):
         img_byte_array = io.BytesIO()
