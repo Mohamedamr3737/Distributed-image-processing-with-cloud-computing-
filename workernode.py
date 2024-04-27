@@ -19,15 +19,12 @@ def handle_client(client_socket, addr):
                 if image_bytes is not None:
                     if message == "gr":
                         processed_image_bytes = greyFilter(image_bytes)
-                        # send processed image
                         send_image_knownbytes(client_socket, (processed_image_bytes, len(processed_image_bytes)))
                     elif message == "ed":
                         edges_bytes = edgeDetection(image_bytes)
-                        # Send detected edges
                         send_image_knownbytes(client_socket, (edges_bytes, len(edges_bytes)))
                     elif message == "fl":
                         filtered_image_bytes = imageFiltering(image_bytes)
-                        # Send filtered image
                         send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
                     else:
                         print(f"Unknown message: {message} enter right choice")
