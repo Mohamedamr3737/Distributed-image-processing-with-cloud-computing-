@@ -5,7 +5,7 @@ import io
 import socket
 import numpy as np
 import threading
-
+import time
 
 class ScrollableImageFrame(tk.Frame):
     def __init__(self, root):
@@ -62,6 +62,8 @@ class ImageConverterApp:
         self.image_label.pack()
         self.scrollable_frame = ScrollableImageFrame(root)
         self.scrollable_frame.pack(side="top", fill="both", expand=True)
+        self.server_status_label = tk.Label(root, text="Server Status: Unknown")
+        self.server_status_label.pack()
     
 
     def upload_image(self):
@@ -114,6 +116,38 @@ class ImageConverterApp:
     def convert_image_thread(self):
         threading.Thread(target=self.convert_image).start()
 
+    def receive_server_status(self):
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_public_ip = 'localhost'  # '52.168.129.142'
+        port = 12348  # Port for receiving server status
+        try:
+            client_socket.connect((server_public_ip, port))
+            client_socket.send("st".encode('utf-8'))
+            message = client_socket.recv(2).decode('utf-8')
+            if message=="ok":
+                return "active"
+            elif message=="no":
+                return "error"
+            return message
+        except ConnectionRefusedError:
+            print("Connection to server failed.")
+            return "Error in Master Node"
+        
+    def monitor_server_status_thread(self):
+        threading.Thread(target=self.monitor_server_status).start()
+
+    def monitor_server_status(self):
+        while True:
+            status = self.receive_server_status()
+            self.server_status_label.config(text=f"Server Status: {status}")
+            if status == "active":
+                self.server_status_label.config(fg="green")
+            else:
+                self.server_status_label.config(fg="red")
+            # Update label with server status
+            
+            time.sleep(1)  # Adjust the sleep time as needed
+
 
     def convert_image(self):
         processedImages=[]
@@ -127,8 +161,8 @@ class ImageConverterApp:
             option="fl"
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        server_public_ip = 'localhost'
-        port = 12348
+        server_public_ip ='localhost'  #'52.168.129.142'
+        port = 12348 #53
         client_socket.connect((server_public_ip, port))
         client_socket.send(option.encode('utf-8'))
         self.send_image(client_socket,path)
@@ -142,4 +176,5 @@ class ImageConverterApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = ImageConverterApp(root)
+    app.monitor_server_status_thread()
     root.mainloop()

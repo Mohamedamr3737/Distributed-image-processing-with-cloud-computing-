@@ -2,6 +2,26 @@ import socket
 import threading
 from imageFunctionsMiddleware import *
 
+
+def monitorWorker(server_public_ip, port, clientsockloggedonmaster):
+# while True:
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((server_public_ip, port))
+        client_socket.send("st".encode('utf-8'))
+        message = client_socket.recv(2).decode('utf-8')
+        if message == "ok":
+            clientsockloggedonmaster.send("ok".encode('utf-8'))
+            print("Worker is still alive")
+        else:
+            print("Worker is dead")
+    except ConnectionRefusedError:
+        clientsockloggedonmaster.send("no".encode('utf-8'))
+        print("Connection to worker failed. Worker might be down.")
+    
+    # time.sleep(5)  # Adjust sleep time as needed
+
+
 def recieveAndSendClient():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = 'localhost'
@@ -13,9 +33,12 @@ def recieveAndSendClient():
     while True:
         client_socket, addr = server_socket.accept()
         operation=client_socket.recv(2).decode('utf-8')
-        imageBytes,_=receive_image(client_socket)
-        client_thread = threading.Thread(target=sendImageToWorker, args=("localhost",12345,client_socket,imageBytes,operation,addr))
-        client_thread.start()
+        if operation =="st":
+            monitorWorker('localhost',12345,client_socket)
+        else:
+            imageBytes,_=receive_image(client_socket)
+            client_thread = threading.Thread(target=sendImageToWorker, args=("localhost",12345,client_socket,imageBytes,operation,addr))
+            client_thread.start()
 
 
 def sendImageToWorker(server_public_ip,port,clientsockloggedonmaster,image_bytes,operation,addr):

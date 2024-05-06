@@ -9,6 +9,10 @@ def handle_client(client_socket, addr):
         message=client_socket.recv(2).decode('utf-8')
         if message == "":
             continue
+
+        elif message=="st":
+            client_socket.send("ok".encode('utf-8'))
+            
         elif message=="q":
             print("client disconnected")
             break
