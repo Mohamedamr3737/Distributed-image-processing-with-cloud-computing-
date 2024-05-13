@@ -91,9 +91,24 @@ class ImageConverterApp:
     
 
     def send_image(self, conn, imagePath):
+        # Open the image
         with open(imagePath, 'rb') as f:
             image_bytes = f.read()
+        
+        # Check if the image is a PNG
+        if imagePath.lower().endswith('.png'):
+            # Convert PNG to RGB mode
+            image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+            # Create a BytesIO object to hold the JPEG data
+            output = io.BytesIO()
+            # Save the image as JPEG to the BytesIO object
+            image.save(output, format='JPEG')
+            # Get the JPEG bytes
+            image_bytes = output.getvalue()
+        
+        # Send the image size
         conn.sendall(len(image_bytes).to_bytes(4, byteorder='big'))
+        # Send the image bytes
         conn.sendall(image_bytes)
 
     def receive_image(self,conn):
@@ -118,8 +133,8 @@ class ImageConverterApp:
 
     def receive_server_status(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_public_ip = 'localhost'  # '52.168.129.142'
-        port = 12348  # Port for receiving server status
+        server_public_ip = '4.211.180.220'  # '52.168.129.142'
+        port = 53  # Port for receiving server status
         try:
             client_socket.connect((server_public_ip, port))
             client_socket.send("st".encode('utf-8'))
@@ -161,8 +176,8 @@ class ImageConverterApp:
             option="fl"
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        server_public_ip ='localhost'  #'52.168.129.142'
-        port = 12348 #53
+        server_public_ip ='4.211.180.220'  #'52.168.129.142'
+        port = 53 #53
         client_socket.connect((server_public_ip, port))
         client_socket.send(option.encode('utf-8'))
         self.send_image(client_socket,path)

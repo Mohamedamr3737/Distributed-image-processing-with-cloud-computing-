@@ -5,7 +5,11 @@ from PIL import Image
 
 def split_image(num_segments, image_bytes):
     img = np.array(Image.open(io.BytesIO(image_bytes)))
-    height, width, _ = img.shape
+    if image_bytes.startswith(b'\x89PNG\r\n\x1a\n'):
+            height, width = img.shape
+    else:
+            height, width, _ = img.shape
+    
     segment_height = height // num_segments
     segments = []
     for i in range(num_segments):
@@ -13,7 +17,11 @@ def split_image(num_segments, image_bytes):
         end = start + segment_height
         if i == num_segments - 1:
             end = height
-        segment = img[start:end, :, :]
+        if image_bytes.startswith(b'\x89PNG\r\n\x1a\n'):
+            segment = img[start:end, :]
+        else:
+            segment = img[start:end, :, :]
+        
         segment_bytes = io.BytesIO()
         Image.fromarray(segment).save(segment_bytes, format='JPEG')
         segment_bytes.seek(0)
