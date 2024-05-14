@@ -6,7 +6,7 @@ import socket
 import numpy as np
 import threading
 import time
-
+import json
 class ScrollableImageFrame(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
@@ -46,7 +46,7 @@ class ImageConverterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Image Converter")
-        self.root.geometry("500x400") 
+        self.root.geometry("550x550") 
         self.root.pack_propagate(True) 
         self.image_bytes = None
         self.image_label = tk.Label(root)
@@ -62,6 +62,8 @@ class ImageConverterApp:
         self.image_label.pack()
         self.scrollable_frame = ScrollableImageFrame(root)
         self.scrollable_frame.pack(side="top", fill="both", expand=True)
+        self.success_fail_label = tk.Label(root, text="", fg="green")  # New label for success or fail
+        self.success_fail_label.pack()  # Pack the new label
         self.server_status_label = tk.Label(root, text="Server Status: Unknown")
         self.server_status_label.pack()
     
@@ -131,20 +133,32 @@ class ImageConverterApp:
     def convert_image_thread(self):
         threading.Thread(target=self.convert_image).start()
 
+
+    def receive_list_from_socket(self,client_socket):
+        buffer_size_str = client_socket.recv(1024).decode('utf-8')
+        buffer_size = int(buffer_size_str)
+        client_socket.send(b'OK')  # Send acknowledgment
+        received_data = b''
+        while len(received_data) < buffer_size:
+            received_data += client_socket.recv(min(buffer_size - len(received_data), 1024))
+        return json.loads(received_data.decode('utf-8'))
+
+
     def receive_server_status(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_public_ip = '4.211.180.220'  # '52.168.129.142'
-        port = 53  # Port for receiving server status
+        server_public_ip = 'localhost'  # '52.168.129.142'
+        port = 12348 # Port for receiving server status
         try:
             client_socket.connect((server_public_ip, port))
             client_socket.send("st".encode('utf-8'))
-            message = client_socket.recv(2).decode('utf-8')
+            message = self.receive_list_from_socket(client_socket)
+            print(message)
             if message=="ok":
                 return "active"
             elif message=="no":
                 return "error"
             return message
-        except ConnectionRefusedError:
+        except Exception as E:
             print("Connection to server failed.")
             return "Error in Master Node"
         
@@ -176,14 +190,18 @@ class ImageConverterApp:
             option="fl"
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        server_public_ip ='4.211.180.220'  #'52.168.129.142'
-        port = 53 #53
+        server_public_ip ='localhost'  #'52.168.129.142'
+        port =12348 #53
         client_socket.connect((server_public_ip, port))
         client_socket.send(option.encode('utf-8'))
         self.send_image(client_socket,path)
-        imageBytes,_=self.receive_image(client_socket)
-        imageBytes=self.bytes_to_image(imageBytes)
-        processedImages.append(imageBytes)
+        try:
+            imageBytes,_=self.receive_image(client_socket)
+            imageBytes=self.bytes_to_image(imageBytes)
+            processedImages.append(imageBytes)
+            self.success_fail_label.config(text="Conversion successful", fg="green")
+        except Exception as E:
+            self.success_fail_label.config(text="Conversion failed, Try again", fg="red")
         for x in processedImages:
             self.scrollable_frame.add_image(x)
 
