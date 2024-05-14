@@ -37,10 +37,22 @@ class ScrollableImageFrame(tk.Frame):
                 new_width = int(max_height * aspect_ratio)
             image = image.resize((new_width, new_height))
         photo = ImageTk.PhotoImage(image)
-        label = tk.Label(self.scrollable_frame, image=photo)
+        label_frame = tk.Frame(self.scrollable_frame)
+        label = tk.Label(label_frame, image=photo)
         label.image = photo
-        label.pack(pady=5)
+        label.pack(pady=5, side="top")
 
+        # Download button
+        download_button = tk.Button(label_frame, text="Download", command=lambda: self.save_image(image))
+        download_button.pack(side="bottom")
+        
+        label_frame.pack(pady=5, padx=5)
+
+    def save_image(self, image):
+        default_filename="image.png"
+        file_path = filedialog.asksaveasfilename(defaultextension=".png",initialfile=default_filename, filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("All files", "*.*")])
+        if file_path:
+            image.save(file_path)
 
 class ImageConverterApp:
     def __init__(self, root):
@@ -53,6 +65,7 @@ class ImageConverterApp:
         self.option_var = tk.StringVar()
         self.option_var.set("grey filter")
         self.imgPath=None
+        self.uploaded_images = []
         self.upload_button = tk.Button(root, text="Upload Photo", command=self.upload_image)
         self.option_menu = tk.OptionMenu(root, self.option_var, "grey filter", "edge detection", "color manipulation")
         self.convert_button = tk.Button(root, text="Convert", command=self.convert_image_thread)
@@ -68,12 +81,20 @@ class ImageConverterApp:
         self.server_status_label.pack()
     
 
+    # def upload_image(self):
+    #     file_path = filedialog.askopenfilename()
+    #     if file_path:
+    #         image = Image.open(file_path)
+    #         self.imgPath=file_path
+    #         self.scrollable_frame.add_image(image)
     def upload_image(self):
-        file_path = filedialog.askopenfilename()
-        if file_path:
-            image = Image.open(file_path)
-            self.imgPath=file_path
-            self.scrollable_frame.add_image(image)
+        self.uploaded_images = []
+        file_paths = filedialog.askopenfilenames()
+        if file_paths:
+            for file_path in file_paths:
+                image = Image.open(file_path)
+                self.uploaded_images.append(file_path)
+                self.scrollable_frame.add_image(image)
 
 
     def resize_photo(self, photo, width, height):
@@ -188,18 +209,26 @@ class ImageConverterApp:
             option="ed"
         elif option=="color manipulation":
             option="fl"
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
 
         server_public_ip ='localhost'  #'52.168.129.142'
         port =12348 #53
-        client_socket.connect((server_public_ip, port))
-        client_socket.send(option.encode('utf-8'))
-        self.send_image(client_socket,path)
+        sockets=[]
+        
+        print(self.uploaded_images)
+        
+        for path in self.uploaded_images:
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.connect((server_public_ip, port)) 
+            client_socket.send(option.encode('utf-8'))
+            self.send_image(client_socket,path)
+            sockets.append(client_socket)
         try:
-            imageBytes,_=self.receive_image(client_socket)
-            imageBytes=self.bytes_to_image(imageBytes)
-            processedImages.append(imageBytes)
-            self.success_fail_label.config(text="Conversion successful", fg="green")
+            for client_socket in sockets:   
+                imageBytes,_=self.receive_image(client_socket)
+                imageBytes=self.bytes_to_image(imageBytes)
+                processedImages.append(imageBytes)
+                self.success_fail_label.config(text="Conversion successful", fg="green")
         except Exception as E:
             self.success_fail_label.config(text="Conversion failed, Try again", fg="red")
         for x in processedImages:
