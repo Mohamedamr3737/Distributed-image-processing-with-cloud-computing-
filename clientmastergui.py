@@ -89,11 +89,22 @@ class ImageConverterApp:
     #         self.scrollable_frame.add_image(image)
     def upload_image(self):
         self.uploaded_images = []
-        file_paths = filedialog.askopenfilenames()
+        
+        # Define the file types allowed for selection
+        file_types = [("Image Files", "*.jpg; *.jpeg; *.png; *.gif; *.bmp")]
+        
+        # Open file dialog to select images
+        file_paths = filedialog.askopenfilenames(filetypes=file_types)
+        
         if file_paths:
             for file_path in file_paths:
+                # Open the image file
                 image = Image.open(file_path)
+                
+                # Append the image to the list
                 self.uploaded_images.append(file_path)
+                
+                # Add the image to the scrollable frame
                 self.scrollable_frame.add_image(image)
 
 
@@ -189,12 +200,7 @@ class ImageConverterApp:
     def monitor_server_status(self):
         while True:
             status = self.receive_server_status()
-            self.server_status_label.config(text=f"Server Status: {status}")
-            if status == "active":
-                self.server_status_label.config(fg="green")
-            else:
-                self.server_status_label.config(fg="red")
-            # Update label with server status
+            self.server_status_label.config(text=f"Available servers ({len(status)}): {status}")
             
             time.sleep(1)  # Adjust the sleep time as needed
 

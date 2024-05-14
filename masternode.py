@@ -87,7 +87,10 @@ def recieveAndSendClient():
             #     ip,port=worker
             #     monitorWorker(ip,port,client_socket,i)
             workingWorkerlistscheckst=chechWorkinworkers(workerslist)
-            send_list_over_socket(client_socket,workingWorkerlistscheckst)
+            try:
+                send_list_over_socket(client_socket,workingWorkerlistscheckst)
+            except  Exception as E:
+                print(E)
         else:
             imageBytes,_=receive_image(client_socket)
             client_thread = threading.Thread(target=sendImageToWorker, args=(client_socket,imageBytes,operation,addr))
