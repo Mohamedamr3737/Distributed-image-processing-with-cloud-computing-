@@ -30,6 +30,33 @@ def handle_client(client_socket, addr):
                     elif message == "fl":
                         filtered_image_bytes = imageFiltering(image_bytes)
                         send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "bl":
+                        filtered_image_bytes = gaussian_blur(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "sk":
+                        filtered_image_bytes = laplacian(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "iv":
+                        filtered_image_bytes = invert_colors(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "bc":
+                        filtered_image_bytes = adjust_brightness_contrast(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "rf":
+                        filtered_image_bytes = apply_red_filter(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "bf":
+                        filtered_image_bytes = apply_blue_filter(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "gf":
+                        filtered_image_bytes = apply_green_filter(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "cc":
+                        filtered_image_bytes = convert_color_space(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
+                    elif message == "hm":
+                        filtered_image_bytes = apply_heat_filter(image_bytes)
+                        send_image_knownbytes(client_socket, (filtered_image_bytes, len(filtered_image_bytes)))
                     else:
                         print(f"Unknown message: {message} enter right choice")
                         continue
@@ -41,7 +68,7 @@ def handle_client(client_socket, addr):
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = 'localhost'
-    port = 12333
+    port = 12345
     server_socket.bind((host, port))
     server_socket.listen(5)
     print(f"Server listening on {host}:{port}")

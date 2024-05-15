@@ -68,7 +68,7 @@ class ImageConverterApp:
         self.imgPath=None
         self.uploaded_images = []
         self.upload_button = tk.Button(root, text="Upload Photo", command=self.upload_image)
-        self.option_menu = tk.OptionMenu(root, self.option_var, "grey filter", "edge detection", "color manipulation")
+        self.option_menu = tk.OptionMenu(root, self.option_var, "grey filter", "edge detection", "color sharpening","blur","sketch","invert colors","brightness contrast","red filter","blue filter","green filter","convert color","heat map")
         self.convert_button = tk.Button(root, text="Convert", command=self.convert_image_thread)
         self.upload_button.pack()
         self.option_menu.pack()
@@ -254,9 +254,26 @@ class ImageConverterApp:
             option="gr"
         elif option=="edge detection":
             option="ed"
-        elif option=="color manipulation":
+        elif option=="color sharpening":
             option="fl"
-        
+        elif option=="blur":
+            option="bl"
+        elif option=="sketch":
+            option="sk"
+        elif option=="invert colors":
+            option="iv"
+        elif option=="brightness contrast":
+            option="bc"
+        elif option=="red filter":
+            option="rf"
+        elif option=="blue filter":
+            option="bf"
+        elif option=="green filter":
+            option="gf"
+        elif option=="convert color":
+            option="cc"
+        elif option=="heat map":
+            option="hm"
         ip,por=self.workingmasterslists[0]
         # server_public_ip ='localhost'  #'4.232.128.42'  #'52.168.129.142'
         # port =12348 #53
