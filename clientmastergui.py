@@ -7,6 +7,7 @@ import numpy as np
 import threading
 import time
 import json
+
 class ScrollableImageFrame(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
@@ -77,10 +78,12 @@ class ImageConverterApp:
         self.scrollable_frame.pack(side="top", fill="both", expand=True)
         self.success_fail_label = tk.Label(root, text="", fg="green")  # New label for success or fail
         self.success_fail_label.pack()  # Pack the new label
-        self.server_status_label = tk.Label(root, text="Server Status: Unknown")
+        self.masters_label = tk.Label(root, text="Masters Status: Unknown")
+        self.masters_label.pack()  # Pack the new label
+        self.server_status_label = tk.Label(root, text="workers Status: Unknown")
         self.server_status_label.pack()
-    
-
+        self.masters=[("localhost",12348),("localhost",55555)]
+        self.workingmasterslists=[]
     # def upload_image(self):
     #     file_path = filedialog.askopenfilename()
     #     if file_path:
@@ -178,10 +181,11 @@ class ImageConverterApp:
 
     def receive_server_status(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_public_ip = 'localhost'  # '52.168.129.142'
-        port = 12348 # Port for receiving server status
+        ip,por=self.workingmasterslists[0]
+        server_public_ip ='localhost' #'4.232.128.42' 
+        port = 12348#53 # Port for receiving server status
         try:
-            client_socket.connect((server_public_ip, port))
+            client_socket.connect((ip, por))
             client_socket.send("st".encode('utf-8'))
             message = self.receive_list_from_socket(client_socket)
             print(message)
@@ -200,10 +204,47 @@ class ImageConverterApp:
     def monitor_server_status(self):
         while True:
             status = self.receive_server_status()
-            self.server_status_label.config(text=f"Available servers ({len(status)}): {status}")
+            self.server_status_label.config(text=f"Available workers ({len(status)}): {status}")
             
             time.sleep(1)  # Adjust the sleep time as needed
 
+    def monitormaster(self,server_public_ip, port):
+        try:
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.connect((server_public_ip, port))
+            client_socket.send("mc".encode('utf-8'))
+            message = client_socket.recv(2).decode('utf-8')
+            if message == "ok":
+                print("master is still alive")
+                return message
+            else:
+                print("master is dead")
+        except ConnectionRefusedError:
+            return "no"
+        
+
+    def chechWorkingmasters(self):
+        
+        while True:
+            try:
+                for i,master in enumerate(self.masters):
+                    ip,ports=master
+                    message=self.monitormaster(ip,ports)
+                    if message == "ok":
+                        if master not in self.workingmasterslists:
+                                self.workingmasterslists.append(master)
+                    else:
+                        if master in self.workingmasterslists:
+                            self.workingmasterslists.remove(master)
+                self.masters_label.config(text=f"Available Masters ({len(self.workingmasterslists)}): {self.workingmasterslists}")
+                
+                time.sleep(1)  # Adjust the sleep time as needed
+            except Exception as e:
+                print(e)
+                continue
+    
+    def monitor_masters_thread(self):
+        threading.Thread(target=self.chechWorkingmasters).start()
 
     def convert_image(self):
         processedImages=[]
@@ -216,16 +257,16 @@ class ImageConverterApp:
         elif option=="color manipulation":
             option="fl"
         
-
-        server_public_ip ='localhost'  #'52.168.129.142'
-        port =12348 #53
+        ip,por=self.workingmasterslists[0]
+        # server_public_ip ='localhost'  #'4.232.128.42'  #'52.168.129.142'
+        # port =12348 #53
         sockets=[]
         
         print(self.uploaded_images)
         
         for path in self.uploaded_images:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client_socket.connect((server_public_ip, port)) 
+            client_socket.connect((ip, por)) 
             client_socket.send(option.encode('utf-8'))
             self.send_image(client_socket,path)
             sockets.append(client_socket)
@@ -244,5 +285,7 @@ class ImageConverterApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = ImageConverterApp(root)
+    app.monitor_masters_thread()
+    time.sleep(4) #this delay is to wait for the system to get the working masters
     app.monitor_server_status_thread()
     root.mainloop()

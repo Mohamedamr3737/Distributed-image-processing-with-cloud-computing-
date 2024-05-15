@@ -59,7 +59,7 @@ def chechWorkinworkers(workerslist):
 def recieveAndSendClient():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = 'localhost'
-    port = 12348
+    port = 55555
     server_socket.bind((host, port))
     server_socket.listen(5)
     print(f"Server listening on {host}:{port}")
