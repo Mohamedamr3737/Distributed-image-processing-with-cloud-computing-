@@ -203,10 +203,14 @@ class ImageConverterApp:
 
     def monitor_server_status(self):
         while True:
-            status = self.receive_server_status()
-            self.server_status_label.config(text=f"Available workers ({len(status)}): {status}")
-            
-            time.sleep(1)  # Adjust the sleep time as needed
+            try:
+                status = self.receive_server_status()
+                self.server_status_label.config(text=f"Available workers ({len(status)}): {status}")
+                
+                time.sleep(1)  # Adjust the sleep time as needed
+            except Exception as E:
+                print(E)
+                continue
 
     def monitormaster(self,server_public_ip, port):
         try:

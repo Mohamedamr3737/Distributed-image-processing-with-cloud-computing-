@@ -2,16 +2,20 @@ import socket
 import threading
 import json
 from imageFunctionsMiddleware import *
-
+from db import *
+from datetime import datetime
 workerslist=[('localhost',12345),('localhost',12349),('localhost',12333)]
 print(len(workerslist))
 
 def send_list_over_socket(client_socket, data):
-    serialized_data = json.dumps(data)
-    buffer_size = len(serialized_data)
-    client_socket.send(str(buffer_size).encode('utf-8'))
-    client_socket.recv(2)  
-    client_socket.sendall(serialized_data.encode('utf-8'))
+    try:
+        serialized_data = json.dumps(data)
+        buffer_size = len(serialized_data)
+        client_socket.send(str(buffer_size).encode('utf-8'))
+        client_socket.recv(2)  
+        client_socket.sendall(serialized_data.encode('utf-8'))
+    except Exception as e:
+        print(e)
 
 
 def monitorWorker(server_public_ip, port, clientsockloggedonmaster,i):
@@ -49,10 +53,12 @@ def chechWorkinworkers(workerslist):
         ip,ports=worker
         message=monitorWorker2(ip,ports)
         if message == "ok":
+            insert_log(f"{worker} is still alive {datetime.now()}")  # Log message to database
             if worker not in workingWorkerlists:
                     workingWorkerlists.append(worker)
         else:
-            if worker in workingWorkerlists:
+            insert_log(f"{worker} is dead {datetime.now()} ") 
+            if worker in workingWorkerlists:  
                 workingWorkerlists.remove(worker)
     return workingWorkerlists
 
