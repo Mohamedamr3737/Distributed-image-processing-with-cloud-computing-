@@ -4,6 +4,7 @@ import json
 from imageFunctionsMiddleware import *
 from db import *
 from datetime import datetime
+import urllib.request
 workerslist=[('localhost',12345),('localhost',12349),('localhost',12333)]
 print(len(workerslist))
 
@@ -63,6 +64,7 @@ def chechWorkinworkers(workerslist):
     return workingWorkerlists
 
 def recieveAndSendClient():
+    insert_log(f"{get_public_ip()} worker started {datetime.now()}")
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = 'localhost'
     port = 12348
@@ -116,6 +118,16 @@ def sendImageToWorker(clientsockloggedonmaster,image_bytes,operation,addr):
         sendImageToWorker(clientsockloggedonmaster,image_bytes,operation,addr)#recursion to check if segment is failed its processes the image again
     client_socket.close()
 
-
+def get_public_ip():
+    try:
+        # Connect to an external service to get your public IP address
+        response = urllib.request.urlopen('http://httpbin.org/ip')
+        data = json.loads(response.read().decode())
+        ip_address = data['origin']
+        return ip_address
+    except Exception as e:
+        print("Error getting public IP:", e)
+        return None
+    
 if __name__ == "__main__":
     recieveAndSendClient()
