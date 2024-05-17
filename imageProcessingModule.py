@@ -30,12 +30,12 @@ def imageFiltering(image_bytes):
 def gaussian_blur(byte_image, kernel_size=(31, 31)):
     """Apply Gaussian blur to the byte image"""
     image = np.frombuffer(byte_image, dtype=np.uint8)
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)  # Read the image in color
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     blurred_image = cv2.GaussianBlur(image, kernel_size, 0)
     _, img_encoded = cv2.imencode('.jpg', blurred_image)
     return img_encoded.tobytes()
 
-def laplacian(byte_image): #sketch
+def laplacian(byte_image):
     """Apply Laplacian filter to the byte image"""
     image = np.frombuffer(byte_image, dtype=np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)
@@ -55,7 +55,7 @@ def apply_red_filter(byte_image):
     image = np.frombuffer(byte_image, dtype=np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     filtered_image = np.zeros_like(image)
-    filtered_image[:,:,2] = image[:,:,2]  # Red channel
+    filtered_image[:,:,2] = image[:,:,2]
     _, img_encoded = cv2.imencode('.jpg', filtered_image)
     return img_encoded.tobytes()
 
@@ -63,7 +63,7 @@ def apply_green_filter(byte_image):
     image = np.frombuffer(byte_image, dtype=np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     filtered_image = np.zeros_like(image)
-    filtered_image[:,:,1] = image[:,:,1]  # Green channel
+    filtered_image[:,:,1] = image[:,:,1]
     _, img_encoded = cv2.imencode('.jpg', filtered_image)
     return img_encoded.tobytes()
 
@@ -71,7 +71,7 @@ def apply_blue_filter(byte_image):
     image = np.frombuffer(byte_image, dtype=np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     filtered_image = np.zeros_like(image)
-    filtered_image[:,:,0] = image[:,:,0]  # Blue channel
+    filtered_image[:,:,0] = image[:,:,0] 
     _, img_encoded = cv2.imencode('.jpg', filtered_image)
     return img_encoded.tobytes()
 

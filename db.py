@@ -18,5 +18,3 @@ def view_logs():
     logs = logs_collection.find()
     for i, log in enumerate(logs):
         print(f"{i}:{log['log']}")
-
-# view_logs()

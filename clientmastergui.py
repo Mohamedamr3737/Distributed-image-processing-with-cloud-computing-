@@ -7,7 +7,7 @@ import numpy as np
 import threading
 import time
 import json
-
+import sys
 class ScrollableImageFrame(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
@@ -42,11 +42,8 @@ class ScrollableImageFrame(tk.Frame):
         label = tk.Label(label_frame, image=photo)
         label.image = photo
         label.pack(pady=5, side="top")
-
-        # Download button
         download_button = tk.Button(label_frame, text="Download", command=lambda: self.save_image(image))
         download_button.pack(side="bottom")
-        
         label_frame.pack(pady=5, padx=5)
 
     def save_image(self, image):
@@ -76,38 +73,29 @@ class ImageConverterApp:
         self.image_label.pack()
         self.scrollable_frame = ScrollableImageFrame(root)
         self.scrollable_frame.pack(side="top", fill="both", expand=True)
-        self.success_fail_label = tk.Label(root, text="", fg="green")  # New label for success or fail
-        self.success_fail_label.pack()  # Pack the new label
+        self.success_fail_label = tk.Label(root, text="", fg="green") 
+        self.success_fail_label.pack()  
         self.masters_label = tk.Label(root, text="Masters Status: Unknown")
-        self.masters_label.pack()  # Pack the new label
+        self.masters_label.pack() 
         self.server_status_label = tk.Label(root, text="workers Status: Unknown")
         self.server_status_label.pack()
-        self.masters=[("localhost",12348),("localhost",55555)]
+        self.masters=[("51.120.112.111",53),("4.232.128.42",53)]#[("localhost",55550),("localhost",55551)]#
         self.workingmasterslists=[]
-    # def upload_image(self):
-    #     file_path = filedialog.askopenfilename()
-    #     if file_path:
-    #         image = Image.open(file_path)
-    #         self.imgPath=file_path
-    #         self.scrollable_frame.add_image(image)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def on_closing(self):
+        self.root.destroy()
+        sys.exit(0)
+
     def upload_image(self):
         self.uploaded_images = []
-        
-        # Define the file types allowed for selection
         file_types = [("Image Files", "*.jpg; *.jpeg; *.png; *.gif; *.bmp")]
-        
-        # Open file dialog to select images
         file_paths = filedialog.askopenfilenames(filetypes=file_types)
         
         if file_paths:
             for file_path in file_paths:
-                # Open the image file
                 image = Image.open(file_path)
-                
-                # Append the image to the list
                 self.uploaded_images.append(file_path)
-                
-                # Add the image to the scrollable frame
                 self.scrollable_frame.add_image(image)
 
 
@@ -128,24 +116,15 @@ class ImageConverterApp:
     
 
     def send_image(self, conn, imagePath):
-        # Open the image
         with open(imagePath, 'rb') as f:
             image_bytes = f.read()
         
-        # Check if the image is a PNG
         if imagePath.lower().endswith('.png'):
-            # Convert PNG to RGB mode
             image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-            # Create a BytesIO object to hold the JPEG data
             output = io.BytesIO()
-            # Save the image as JPEG to the BytesIO object
             image.save(output, format='JPEG')
-            # Get the JPEG bytes
             image_bytes = output.getvalue()
-        
-        # Send the image size
         conn.sendall(len(image_bytes).to_bytes(4, byteorder='big'))
-        # Send the image bytes
         conn.sendall(image_bytes)
 
     def receive_image(self,conn):
@@ -166,7 +145,9 @@ class ImageConverterApp:
         image.show()
 
     def convert_image_thread(self):
-        threading.Thread(target=self.convert_image).start()
+        thread=threading.Thread(target=self.convert_image)
+        thread.daemon = True  
+        thread.start()
 
 
     def receive_list_from_socket(self,client_socket):
@@ -182,8 +163,6 @@ class ImageConverterApp:
     def receive_server_status(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ip,por=self.workingmasterslists[0]
-        server_public_ip ='localhost' #'4.232.128.42' 
-        port = 12348#53 # Port for receiving server status
         try:
             client_socket.connect((ip, por))
             client_socket.send("st".encode('utf-8'))
@@ -199,7 +178,9 @@ class ImageConverterApp:
             return "Error in Master Node"
         
     def monitor_server_status_thread(self):
-        threading.Thread(target=self.monitor_server_status).start()
+        thread=threading.Thread(target=self.monitor_server_status)
+        thread.daemon = True
+        thread.start()
 
     def monitor_server_status(self):
         while True:
@@ -207,7 +188,7 @@ class ImageConverterApp:
                 status = self.receive_server_status()
                 self.server_status_label.config(text=f"Available workers ({len(status)}): {status}")
                 
-                time.sleep(1)  # Adjust the sleep time as needed
+                time.sleep(1)  
             except Exception as E:
                 print(E)
                 continue
@@ -242,13 +223,15 @@ class ImageConverterApp:
                             self.workingmasterslists.remove(master)
                 self.masters_label.config(text=f"Available Masters ({len(self.workingmasterslists)}): {self.workingmasterslists}")
                 
-                time.sleep(1)  # Adjust the sleep time as needed
+                time.sleep(1)
             except Exception as e:
                 print(e)
                 continue
     
     def monitor_masters_thread(self):
-        threading.Thread(target=self.chechWorkingmasters).start()
+        thread=threading.Thread(target=self.chechWorkingmasters)
+        thread.daemon = True  # Make the thread a daemon thread
+        thread.start()
 
     def convert_image(self):
         processedImages=[]
@@ -278,14 +261,14 @@ class ImageConverterApp:
             option="cc"
         elif option=="heat map":
             option="hm"
-        ip,por=self.workingmasterslists[0]
-        # server_public_ip ='localhost'  #'4.232.128.42'  #'52.168.129.142'
-        # port =12348 #53
+        
+        
         sockets=[]
         
         print(self.uploaded_images)
-        
         for path in self.uploaded_images:
+         
+            ip,por=self.workingmasterslists[0]
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect((ip, por)) 
             client_socket.send(option.encode('utf-8'))
