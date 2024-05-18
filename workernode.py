@@ -98,8 +98,8 @@ def get_public_ip():
 def main():
     # insert_log(f"{get_public_ip()} worker started {datetime.now()}")
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host ='0.0.0.0'#'0.0.0.0' #'localhost'
-    port =53 #55555
+    host ='0.0.0.0'
+    port =53
     server_socket.bind((host, port))
     server_socket.listen(5)
     print(f"Server listening on {host}:{port}")
@@ -107,7 +107,7 @@ def main():
     while True:
         client_socket, addr = server_socket.accept()
         client_thread = threading.Thread(target=handle_client, args=(client_socket, addr))
-        client_thread.daemon=True
+        # client_thread.daemon=True
         client_thread.start()
     
 if __name__ == "__main__":

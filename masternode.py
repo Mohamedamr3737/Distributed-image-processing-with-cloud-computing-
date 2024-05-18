@@ -5,7 +5,7 @@ from imageFunctionsMiddleware import *
 # from db import *
 from datetime import datetime
 import urllib.request
-workerslist=[('40.82.152.147',53),('20.215.232.32',53),('20.28.42.106',53)]#[('localhost',55555),('localhost',55554),('localhost',55553)]#
+workerslist=[('40.82.152.147',53),('20.215.232.32',53),('20.28.42.106',53)]
 print(len(workerslist))
 
 def send_list_over_socket(client_socket, data):
@@ -69,8 +69,8 @@ def chechWorkinworkers(workerslist):
 def recieveAndSendClient():
     # insert_log(f"{get_public_ip()} worker started {datetime.now()}")
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host ='localhost'#'0.0.0.0' #'localhost'
-    port = 55551#55551
+    host ='0.0.0.0'
+    port = 53
     server_socket.bind((host, port))
     server_socket.listen(5)
     print(f"Server listening on {host}:{port}")

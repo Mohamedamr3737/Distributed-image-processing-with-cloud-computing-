@@ -79,7 +79,7 @@ class ImageConverterApp:
         self.masters_label.pack() 
         self.server_status_label = tk.Label(root, text="workers Status: Unknown")
         self.server_status_label.pack()
-        self.masters=[("51.120.112.111",53),("4.232.128.42",53)]#[("localhost",55550),("localhost",55551)]#
+        self.masters=[("51.120.112.111",53),("4.232.128.42",53)]
         self.workingmasterslists=[]
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 

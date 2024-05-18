@@ -28,7 +28,6 @@ def imageFiltering(image_bytes):
     return filtered_image_bytes
 
 def gaussian_blur(byte_image, kernel_size=(31, 31)):
-    """Apply Gaussian blur to the byte image"""
     image = np.frombuffer(byte_image, dtype=np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     blurred_image = cv2.GaussianBlur(image, kernel_size, 0)
@@ -36,7 +35,6 @@ def gaussian_blur(byte_image, kernel_size=(31, 31)):
     return img_encoded.tobytes()
 
 def laplacian(byte_image):
-    """Apply Laplacian filter to the byte image"""
     image = np.frombuffer(byte_image, dtype=np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)
     laplacian_image = cv2.Laplacian(image, cv2.CV_64F)
